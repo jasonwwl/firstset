@@ -1,0 +1,9 @@
+pub const STAGE1_KMS: &str = include_str!("../assets/scripts/stage1-kms.ps1");
+pub const STAGE1_SSH: &str = include_str!("../assets/scripts/stage1-ssh.ps1");
+pub const STAGE1_RDP: &str = include_str!("../assets/scripts/stage1-rdp.ps1");
+pub const NETWORK_INFO: &str = include_str!("../assets/scripts/network-info.ps1");
+pub const STAGE2_RDS_ROLES: &str = include_str!("../assets/scripts/stage2-rds-roles.ps1");
+#[cfg(target_os = "windows")]
+pub const CHECK_RDS_ROLES: &str = include_str!("../assets/scripts/check-rds-roles.ps1");
+pub const STAGE3_RDS_LICENSING: &str = include_str!("../assets/scripts/stage3-rds-licensing.ps1");
+pub const STAGE4_USERS: &str = include_str!("../assets/scripts/stage4-users.ps1");

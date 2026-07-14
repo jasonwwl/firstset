@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    name: Check and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.92'
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test --locked
+
+  windows-release:
+    name: Windows x64 release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.92'
+      - run: cargo build --release --locked
+      - name: Assemble artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist | Out-Null
+          Copy-Item target\release\firstset.exe dist\FirstSet.exe
+          Copy-Item config.example.toml dist\
+          Copy-Item README.md dist\
+          Compress-Archive -Path dist\* -DestinationPath firstset-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firstset-windows-x64
+          path: firstset-windows-x64.zip

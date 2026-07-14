@@ -1,0 +1,8 @@
+/target/
+/dist/
+/config.toml
+*.log
+*.pdb
+*.exe
+*.msi
+.DS_Store

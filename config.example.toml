@@ -1,0 +1,38 @@
+[ui]
+language = "SimplifiedChinese"
+
+[base]
+windows_product_key = ""
+kms_server = ""
+administrator_public_key = "ssh-ed25519 REPLACE_WITH_YOUR_PUBLIC_KEY administrator"
+allowed_remote_addresses = ["Any"]
+
+[rds]
+licensing_mode = "PerDevice"
+license_server = "localhost"
+cal_install_method = "None"
+agreement_type = "Enterprise"
+agreement_number = ""
+license_key_pack_id = ""
+cal_product_version_id = 7
+cal_count = 20
+
+[rds.contact]
+first_name = ""
+last_name = ""
+company = ""
+country_region = "China"
+email = ""
+org_unit = ""
+address = ""
+city = ""
+state = ""
+postal_code = ""
+
+[users]
+count = 20
+prefix = "user"
+start_index = 1
+number_width = 2
+password_length = 16
+reset_existing_passwords = false
