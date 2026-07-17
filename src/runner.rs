@@ -677,6 +677,14 @@ mod tests {
     }
 
     #[test]
+    fn openssh_setup_repairs_and_verifies_the_service() {
+        assert!(scripts::STAGE1_SSH.contains("sc.exe config sshd obj= LocalSystem start= auto"));
+        assert!(scripts::STAGE1_SSH.contains("$serviceDetails.StartName"));
+        assert!(scripts::STAGE1_SSH.contains("Get-NetTCPConnection"));
+        assert!(scripts::STAGE1_SSH.contains("$serviceDetails.ProcessId"));
+    }
+
+    #[test]
     fn rds_contact_country_is_normalized_for_the_windows_locale() {
         assert!(scripts::STAGE3_RDS_LICENSING.contains("$uiCulture = (Get-UICulture).Name"));
         assert!(scripts::STAGE3_RDS_LICENSING.contains("$countryRegion = '中国'"));

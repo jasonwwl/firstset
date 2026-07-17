@@ -18,6 +18,7 @@ The interface is available in English and Simplified Chinese.
 ## Features
 
 - **Base access**: optionally configure Windows KMS activation, OpenSSH, and RDP;
+  OpenSSH setup also repairs the `sshd` service identity and verifies that the service owns the TCP 22 listener;
   automatically maintain the linked TCP 22 and TCP/UDP 3389 Windows Firewall rules;
   and display active adapter IP, MAC, gateway, and DNS information.
 - **RDS roles**: detect the current status of RD Session Host, RD Licensing, and the
