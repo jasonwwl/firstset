@@ -14,7 +14,8 @@ FirstSet 是面向 Windows Server 的首次配置工具。它将容易出错的 
 
 ## 功能
 
-- **基础访问**：可选择配置 Windows KMS 激活、OpenSSH 和 RDP；自动维护关联的 TCP 22
+- **基础访问**：可选择配置 Windows KMS 激活、OpenSSH 和 RDP；OpenSSH 配置会自动修复
+  `sshd` 服务身份，并确认服务进程实际监听 TCP 22；自动维护关联的 TCP 22
   与 TCP/UDP 3389 Windows 防火墙规则；显示活动网卡的 IP、MAC、网关和 DNS 信息。
 - **RDS 角色**：检测远程桌面会话主机、RD 授权服务和授权管理工具的当前状态；补装缺失
   组件，并在 Windows 明确要求时提示重启。

@@ -36,7 +36,26 @@ if ($capability.State -ne 'Installed') {
     Add-WindowsCapability -Online -Name 'OpenSSH.Server~~~~0.0.1.0' | Out-Null
 }
 
-Set-Service sshd -StartupType Automatic
+# The inbox OpenSSH service normally runs as LocalSystem. Merely changing its
+# startup type does not repair a service whose logon account was modified, and
+# such a service can appear healthy while dropping connections during user
+# authentication. Restore the complete known-good service identity every time.
+$service = Get-Service -Name 'sshd' -ErrorAction Stop
+if ($service.Status -ne 'Stopped') {
+    Stop-Service -Name 'sshd' -Force
+    $service.WaitForStatus([System.ServiceProcess.ServiceControllerStatus]::Stopped,
+        [TimeSpan]::FromSeconds(15))
+}
+
+$null = & sc.exe config sshd obj= LocalSystem start= auto 2>&1
+$scExitCode = $LASTEXITCODE
+if ($scExitCode -ne 0) {
+    throw "Failed to restore the OpenSSH service account and startup type (sc.exe exit code $scExitCode)."
+}
+Write-Output 'OpenSSH service identity and startup type restored.'
+
+# Starting once also lets a fresh OpenSSH installation create its host keys and
+# default configuration before FirstSet updates and validates that configuration.
 Start-Service sshd
 Set-InboundRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' `
     -Protocol TCP -LocalPort 22 -RemoteAddress $remoteAddresses
@@ -63,4 +82,34 @@ if ($LASTEXITCODE -ne 0) {
     throw 'OpenSSH configuration validation failed.'
 }
 Restart-Service sshd
-Write-Output 'OpenSSH is running and TCP 22 is allowed by Windows Firewall.'
+
+$service = Get-Service -Name 'sshd'
+$service.WaitForStatus([System.ServiceProcess.ServiceControllerStatus]::Running,
+    [TimeSpan]::FromSeconds(15))
+$deadline = [DateTime]::UtcNow.AddSeconds(15)
+do {
+    $serviceDetails = Get-CimInstance Win32_Service -Filter "Name='sshd'"
+    $listener = Get-NetTCPConnection -State Listen -LocalPort 22 -ErrorAction SilentlyContinue |
+        Where-Object { $_.OwningProcess -eq $serviceDetails.ProcessId } |
+        Select-Object -First 1
+    if ($null -ne $listener) {
+        break
+    }
+    Start-Sleep -Milliseconds 250
+} while ([DateTime]::UtcNow -lt $deadline)
+
+if ($serviceDetails.State -ne 'Running') {
+    throw "OpenSSH service verification failed: unexpected state '$($serviceDetails.State)'."
+}
+if ($serviceDetails.StartMode -ne 'Auto') {
+    throw "OpenSSH service verification failed: unexpected start mode '$($serviceDetails.StartMode)'."
+}
+if ($serviceDetails.StartName -notin @('LocalSystem', 'NT AUTHORITY\SYSTEM')) {
+    throw "OpenSSH service verification failed: unexpected service account '$($serviceDetails.StartName)'."
+}
+if ($null -eq $listener) {
+    throw 'OpenSSH service verification failed: sshd is not listening on TCP 22.'
+}
+
+Write-Output "OpenSSH verified: service account=$($serviceDetails.StartName), startup=Automatic, state=Running, TCP 22=Listening."
+Write-Output 'The linked TCP 22 Windows Firewall rule is enabled.'
