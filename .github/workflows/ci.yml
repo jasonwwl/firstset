@@ -26,12 +26,42 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.92'
-      - run: cargo build --release --locked
+      - run: cargo build --release --locked --target x86_64-pc-windows-msvc
+      - name: Verify self-contained MSVC runtime
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $binary = 'target\x86_64-pc-windows-msvc\release\firstset.exe'
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installationPath = (& $vswhere -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath).Trim()
+          if ([string]::IsNullOrWhiteSpace($installationPath)) {
+            throw 'Visual Studio C++ tools were not found.'
+          }
+
+          $versionFile = Join-Path $installationPath `
+            'VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt'
+          $toolsVersion = (Get-Content -Raw -Path $versionFile).Trim()
+          $dumpbin = Join-Path $installationPath `
+            "VC\Tools\MSVC\$toolsVersion\bin\Hostx64\x64\dumpbin.exe"
+          $dependencies = & $dumpbin /DEPENDENTS $binary 2>&1
+          $dumpbinExitCode = $LASTEXITCODE
+          $dependencies | Write-Output
+          if ($dumpbinExitCode -ne 0) {
+            throw "dumpbin failed with exit code $dumpbinExitCode."
+          }
+
+          $dependencyText = $dependencies -join "`n"
+          if ($dependencyText -match '(?im)^\s*(?:VCRUNTIME|MSVCP)[A-Z0-9_]*\.dll\s*$') {
+            throw 'FirstSet.exe still depends on the dynamic MSVC runtime.'
+          }
+          Write-Output 'Verified: FirstSet.exe has no VCRUNTIME or MSVCP DLL dependency.'
       - name: Assemble artifact
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist | Out-Null
-          Copy-Item target\release\firstset.exe dist\FirstSet.exe
+          Copy-Item target\x86_64-pc-windows-msvc\release\firstset.exe dist\FirstSet.exe
           Copy-Item config.example.toml dist\
           Copy-Item README.md dist\
           Copy-Item README_CN.md dist\
