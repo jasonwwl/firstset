@@ -99,11 +99,13 @@ cargo test --locked
 cargo build --release --locked
 ```
 
-Release builds for Windows embed a `requireAdministrator` application manifest. System
-configuration scripts live in `assets/scripts/` and remain compatible with Windows
-PowerShell 5.1. The GUI uses Direct3D 12 through WGPU so that it can run with the remote
-display driver after RDS roles are enabled, with Windows WARP available as a software
-rendering fallback.
+Release builds for Windows embed a `requireAdministrator` application manifest and
+statically link the MSVC runtime, so a clean server does not need a separately installed
+`VCRUNTIME140.dll`. CI inspects the final PE dependencies before publishing the artifact.
+System configuration scripts live in `assets/scripts/` and remain compatible with
+Windows PowerShell 5.1. The GUI uses Direct3D 12 through WGPU so that it can run with the
+remote display driver after RDS roles are enabled, with Windows WARP available as a
+software rendering fallback.
 
 ## Security boundaries
 

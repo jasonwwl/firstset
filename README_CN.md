@@ -83,9 +83,11 @@ cargo test --locked
 cargo build --release --locked
 ```
 
-Windows Release 构建会嵌入 `requireAdministrator` 应用清单。系统配置脚本位于
-`assets/scripts/`，兼容 Windows PowerShell 5.1。GUI 通过 WGPU 使用 Direct3D 12，
-可在启用 RDS 角色后的远程显示驱动环境中运行，并可使用 Windows WARP 进行软件渲染。
+Windows Release 构建会嵌入 `requireAdministrator` 应用清单并静态链接 MSVC 运行库，
+因此刚装完的服务器不需要预先安装 `VCRUNTIME140.dll`。CI 会在发布前检查最终 EXE 的
+PE 依赖。系统配置脚本位于 `assets/scripts/`，兼容 Windows PowerShell 5.1。GUI 通过
+WGPU 使用 Direct3D 12，可在启用 RDS 角色后的远程显示驱动环境中运行，并可使用
+Windows WARP 进行软件渲染。
 
 ## 安全边界
 
